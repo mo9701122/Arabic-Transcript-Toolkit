@@ -1,0 +1,8 @@
+[project]
+name = "arabic-transcript-toolkit"
+version = "0.1.0"
+description = "Normalize, lint and score Arabic transcripts"
+requires-python = ">=3.9"
+
+[project.scripts]
+arabic-toolkit = "arabic_toolkit.cli:main"
