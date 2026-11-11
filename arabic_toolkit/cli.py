@@ -6,7 +6,7 @@ from pathlib import Path
 from . import __version__
 from .lint import lint_text
 from .normalize import normalize
-from .wer import compute_wer
+from .wer import compute_wer, list_errors
 
 
 def _read(path: str) -> str:
@@ -29,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_wer.add_argument("reference")
     p_wer.add_argument("hypothesis")
     p_wer.add_argument("--raw", action="store_true", help="skip normalization")
+    p_wer.add_argument("--show-errors", action="store_true", help="list each error with its line number")
     return parser
 
 
@@ -44,8 +45,14 @@ def main(argv=None) -> int:
         print(f"{len(issues)} issue(s) found", file=sys.stderr)
         return 1 if issues else 0
     if args.command == "wer":
-        r = compute_wer(_read(args.reference), _read(args.hypothesis), normalize_text=not args.raw)
+        reference = _read(args.reference)
+        hypothesis = _read(args.hypothesis)
+        normalize_text = not args.raw
+        r = compute_wer(reference, hypothesis, normalize_text=normalize_text)
         print(f"WER: {r.wer:.2%}  (S={r.substitutions} D={r.deletions} I={r.insertions} N={r.ref_words})")
+        if args.show_errors:
+            for error in list_errors(reference, hypothesis, normalize_text=normalize_text):
+                print(f"line {error.line}: {error.kind} (reference: {error.reference or '-'}, typed: {error.typed or '-'})")
         return 0
     return 2
 
